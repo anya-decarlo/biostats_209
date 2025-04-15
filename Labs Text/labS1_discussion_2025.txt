@@ -1,0 +1,830 @@
+Biostatistics 209, Lab #1 Discussion
+2. Data
+• Without specifying the failure option, all times are treated as non-censored events.
+3. Exploring Stage Effects Using Kaplan-Meier Curves
+Question 3.1.:
+Based on the Kaplan-Meier curve what is your impression of the influence of
+the stages on death? Does it appear that the effect of 1 unit change in stage is the same across the
+range of values?
+We see a smaller separation between stages I and II in
+contrast to a wider separation between stages I/II and stage III
+and stage IV. There appears, overall, to be worsening survival
+with higher stages of disease, as we’d expect.
+This is further confirmed by looking at the Kaplan-Meier curves
+at years 1 and 2 and by looking at the median survival in the
+groups.
+
+. sts list, by(stage) risktable(1 2 5)
+At
+Net
+Survivor
+Std.
+Time
+Risk
+Fail
+Lost
+Function
+Error
+[95% Conf. Int.]
+-----------------------------------------------------------------------stage=1
+1
+32
+1
+0
+0.9697
+0.0298
+0.8037
+0.9957
+2
+31
+8
+5
+0.9394
+0.0415
+0.7788
+0.9845
+5
+18
+5
+13
+0.6762
+0.0847
+0.4806
+0.8114
+stage=2
+1
+16
+1
+0
+0.9412
+0.0571
+0.6502
+0.9915
+2
+15
+3
+6
+0.8235
+0.0925
+0.5471
+0.9394
+5
+6
+2
+4
+0.6655
+0.1255
+0.3644
+0.8485
+stage=3
+1
+22
+6
+0
+0.7778
+0.0800
+0.5709
+0.8934
+2
+16
+2
+4
+0.5926
+0.0946
+0.3863
+0.7499
+5
+10
+4
+6
+0.4667
+0.0995
+0.2674
+0.6438
+stage=4
+1
+8
+2
+0
+0.5385
+0.1383
+0.2477
+0.7599
+2
+6
+4
+2
+0.3846
+0.1349
+0.1405
+0.6280
+5
+0
+0
+0
+.
+.
+.
+.
+-----------------------------------------------------------------------Notes: Survival-time summaries shown for specified times in (0, 10.7].
+Net Lost equals the number lost minus the number who entered.
+
+. sts list if stage==2
+At
+Survivor
+Std.
+Time
+Risk
+Fail
+Lost
+Function
+Error
+[95% Conf. Int.]
+-----------------------------------------------------------------------.2
+17
+1
+0
+0.9412
+0.0571
+0.6502
+0.9915
+1.8
+16
+1
+0
+0.8824
+0.0781
+0.6060
+0.9692
+2
+15
+1
+0
+0.8235
+0.0925
+0.5471
+0.9394
+2.2
+14
+0
+1
+0.8235
+0.0925
+0.5471
+0.9394
+2.6
+13
+0
+1
+0.8235
+0.0925
+0.5471
+0.9394
+3.3
+12
+0
+1
+0.8235
+0.0925
+0.5471
+0.9394
+3.6
+11
+1
+1
+0.7487
+0.1103
+0.4562
+0.8987
+4
+9
+1
+0
+0.6655
+0.1255
+0.3644
+0.8485
+4.3
+8
+0
+2
+0.6655
+0.1255
+0.3644
+0.8485
+5
+6
+0
+1
+0.6655
+0.1255
+0.3644
+0.8485
+6.2
+5
+1
+0
+0.5324
+0.1557
+0.2090
+0.7758
+7
+4
+1
+0
+0.3993
+0.1641
+0.1100
+0.6826
+7.5
+3
+0
+1
+0.3993
+0.1641
+0.1100
+0.6826
+7.6
+2
+0
+1
+0.3993
+0.1641
+0.1100
+0.6826
+9.3
+1
+0
+1
+0.3993
+0.1641
+0.1100
+0.6826
+------------------------------------------------------------------------
+
+no. of
+stage
+| subjects
+50%
+Std. Err.
+[95% Conf. Interval]
+-------------+------------------------------------------------------------1 |
+33
+6.5
+.6520345
+4.3
+.
+2 |
+17
+7
+1.23299
+3.6
+.
+3 |
+27
+5
+1.983816
+1.6
+7.8
+4 |
+13
+1.5
+.7189736
+.4
+3.6
+-------------+------------------------------------------------------------total |
+90
+6
+.9049742
+3.8
+7
+. stci, by(stage) p(25)
+no. of
+stage
+| subjects
+25%
+Std. Err.
+[95% Conf. Interval]
+-------------+------------------------------------------------------------1 |
+33
+4
+.4844657
+2.4
+6
+2 |
+17
+3.6
+.4884008
+.2
+7
+3 |
+27
+1.3
+.569275
+.3
+1.9
+4 |
+13
+.8
+.2923527
+.1
+1.5
+-------------+------------------------------------------------------------total |
+90
+2
+.660467
+1.3
+3.5
+
+On shaded numbers: at year 5, 3 have failed since year2;
+stage II has median survival=7 years (where the red horizontal line hits the curves at 1st time survival
+
+1
+
+Biostatistics 209
+
+Lab #1
+
+<0.5); first quartile survival time is 3.6 with 95%CI (.2, 7) for stage II (where the green line hits the
+curves at 1st time survival <0.75);
+
+4. The Cox Model
+Question 4.1.: Is stage a statistically significant predictor? Which stage is at highest
+risk of death? Which are second and third?
+The Cox model output is
+LR chi2(3)
+=
+16.26
+Log likelihood =
+-189.08124
+Prob > chi2
+=
+0.0010
+-----------------------------------------------------------------------------_t | Haz. Ratio
+Std. Err.
+z
+P>|z|
+[95% Conf. Interval]
+-------------+---------------------------------------------------------------stage |
+2 |
+1.067972
+.489604
+0.14
+0.886
+.4348436
+2.622932
+3 |
+1.844227
+.655076
+1.72
+0.085
+.9193153
+3.69968
+4 |
+5.600403
+2.350266
+4.11
+0.000
+2.46039
+12.74778
+------------------------------------------------------------------------------
+
+Stage is a significant predictor overall. This is evident from the likelihood ratio test in the upper
+right hand corner. Recall, this examines if all the predictors in the model can be dropped -- this
+amounts to an overall test of the significance of stage. You might consider comparing this result
+to the logrank test, which you obtain by typing
+sts test stage
+Both of these are significant, confirming that stage associates with risk of death.
+Here, stage I is the reference and since all the hazard ratios are above 1, we see that stages II,
+III and IV all have a higher hazard than stage I. Hence, stage I has the lowest hazard (risk of
+death). The risk order follows the stage numbering (stage IV highest, stage III next highest, stage
+II third highest). This is evident by the magnitudes of the hazard ratios as the hazard ratio for the
+reference is implicitly equal to one.
+
+Question 4.2.: Obtain the hazard ratio of Stage II vs. Stage I.
+LR chi2(3)
+=
+16.26
+Log likelihood =
+-189.08124
+Prob > chi2
+=
+0.0010
+-----------------------------------------------------------------------------_t | Haz. Ratio
+Std. Err.
+z
+P>|z|
+[95% Conf. Interval]
+-------------+---------------------------------------------------------------stage |
+2 |
+1.067972
+.489604
+0.14
+0.886
+.4348436
+2.622932
+3 |
+1.844227
+.655076
+1.72
+0.085
+.9193153
+3.69968
+4 |
+5.600403
+2.350266
+4.11
+0.000
+2.46039
+12.74778
+------------------------------------------------------------------------------
+
+The HR comparing Stage II vs. I is 1.07 (95% CI, 0.43 to 2.62).
+
+Question 4.3.: Obtain the hazard ratio of Stage III vs. Stage II.
+. lincom 3.stage - 2.stage, hr
+( 1)
+
+- 2.stage + 3.stage = 0
+
+2
+
+Biostatistics 209
+
+Lab #1
+
+-----------------------------------------------------------------------------_t | Haz. ratio
+Std. err.
+z
+P>|z|
+[95% conf. interval]
+-------------+---------------------------------------------------------------(1) |
+1.726849
+.7771455
+1.21
+0.225
+.7147963
+4.171827
+------------------------------------------------------------------------------
+
+The HR comparing Stage III vs. II is 1.73 (95% CI, 0.71 to 4.17).
+
+Question 4.4.: Obtain the hazard ratio of Stage IV vs. Stage III.
+. lincom 4.stage - 3.stage, hr
+----------------------------------------------------------------------------_t | Haz. Ratio
+Std. Err.
+z
+P>|z|
+[95% Conf. Interval]
+-------------+---------------------------------------------------------------(1) |
+3.036721
+1.233688
+2.73
+0.006
+1.369616
+6.73304
+------------------------------------------------------------------------------
+
+The HR comparing Stage IV vs. III is 3.03 (95% CI, 1.37 to 6.73).
+
+Question 4.5.: Does it appear that the effect of 1 unit change in stage is the same across the range of
+values?
+Not quite. For example, the hazard ratio for Stage 2 vs. Stage 1 is about 1.07, Stage 3 vs. Stage
+2 is roughly 1.73, and Stage 4 vs. Stage 3 jumps to 3.04. This indicates that moving from Stage 3
+to Stage 4 has a much larger impact than moving from Stage 2 to Stage 3. Thus, the effect of a
+one-unit increase in stage varies across its range.
+
+Question 4.6.: Do your answers above agree with the Kaplan-Meier graphs?
+Yes, the magnitudes of the hazard ratios are consistent with the amount of separation between
+the survival curves.
+The HR of stage III compared to stage II is 1.73, which is fairly larger than 1.07 even though not
+significantly different.
+. lincom 3.stage - 2.stage, hr
+-----------------------------------------------------------------------------_t | Haz. Ratio
+Std. Err.
+z
+P>|z|
+[95% Conf. Interval]
+-------------+---------------------------------------------------------------(1) |
+1.726849
+.7771455
+1.21
+0.225
+.7147963
+4.171827
+------------------------------------------------------------------------------
+
+Question 4.7.: Implement a trend test for stage:
+contrast p.stage
+
+Is there evidence of a linear trend?
+. contrast p.stage
+
+3
+
+Biostatistics 209
+
+Lab #1
+Contrasts of marginal linear predictions
+Margins
+
+: asbalanced
+
+-----------------------------------------------|
+df
+chi2
+P>chi2
+-------------+---------------------------------stage |
+(linear) |
+1
+18.30
+0.0000
+(quadratic) |
+1
+2.94
+0.0862
+(cubic) |
+1
+0.00
+0.9527
+Joint |
+3
+18.95
+0.0003
+------------------------------------------------------------------------------------------------------------|
+Contrast
+Std. Err.
+[95% Conf. Interval]
+-------------+-----------------------------------------------stage |
+(linear) |
+.6389356
+.149369
+.3461777
+.9316936
+(quadratic) |
+.2612541
+.1522514
+-.0371532
+.5596615
+(cubic) |
+.0093852
+.1581767
+-.3006354
+.3194058
+--------------------------------------------------------------
+
+This test suggests a significant trend towards shorter survival with higher stage
+o To see another example of a trend test being used for survival data, see the age results for
+the WHI paper on HRT by age and years since menopause JAMA. 2007; 297:1465-1477
+
+5. Changing the Reference
+Questions 5.1.-5.4: Fit a new model for stage using 4 as the baseline group. How does it
+compare to the previous model? Is stage a stronger predictor?
+No. of subjects =
+No. of failures =
+Time at risk
+=
+
+90
+50
+377.8000028
+
+Log likelihood
+
+-189.08124
+
+=
+
+Number of obs
+
+=
+
+90
+
+LR chi2(3)
+Prob > chi2
+
+=
+=
+
+16.26
+0.0010
+
+-----------------------------------------------------------------------------_t | Haz. Ratio
+Std. Err.
+z
+P>|z|
+[95% Conf. Interval]
+-------------+---------------------------------------------------------------stage |
+1 |
+.1785586
+.0749339
+-4.11
+0.000
+.078445
+.4064397
+2 |
+.1906956
+.0949948
+-3.33
+0.001
+.0718316
+.5062508
+3 |
+.3293025
+.1337813
+-2.73
+0.006
+.1485213
+.7301318
+------------------------------------------------------------------------------
+
+Only superficially. It appears to be stronger because we see that all the coefficients have p-values
+that are significant, where the model before showed only 1 p-value to be significant. This is why
+looking at those p-values is somewhat unreliable to assess overall statistical significance for a
+
+4
+
+Biostatistics 209
+
+Lab #1
+
+predictor. Instead, you should pay close attention to the overall test (which is the same as in the
+previous fit) and carefully look at any important pairwise comparisons.
+You can see that the pairwise comparisons of stage are exactly the same as those generated in
+by Questions 4.3 and 4.4. Use
+lincom 3.stage - 2.stage, hr
+lincom
+- 3.stage, hr
+
+Hence, the short answer is that the model and results are actually exactly the same. All that has
+changed is how Stata displays them. The results given in Question 5.1 present the results in
+reference to stage IV and that makes the results appear somewhat more statistically significant
+when they are actually not different.
+
+6. Continuous Predictors
+Question 6.1.:
+
+What is the effect of age on survival after adjusting for stage?
+stcox age i.stage
+
+. stcox age i.stage
+Cox regression -- Breslow method for ties
+No. of subjects =
+No. of failures =
+Time at risk
+=
+
+90
+50
+377.8000028
+
+Log likelihood
+
+-188.17944
+
+=
+
+Number of obs
+
+=
+
+90
+
+LR chi2(4)
+Prob > chi2
+
+=
+=
+
+18.07
+0.0012
+
+-----------------------------------------------------------------------------_t | Haz. Ratio
+Std. Err.
+z
+P>|z|
+[95% Conf. Interval]
+-------------+---------------------------------------------------------------age |
+1.019082
+.014523
+1.33
+0.185
+.991011
+1.047947
+|
+stage |
+2 |
+1.148623
+.5310148
+0.30
+0.764
+.4641543
+2.842449
+3 |
+1.893354
+.6741862
+1.79
+0.073
+.9421837
+3.804766
+4 |
+5.43607
+2.295152
+4.01
+0.000
+2.376299
+12.43567
+-----------------------------------------------------------------------------.
+
+The effect of age is an approximate 2% increase in the hazard of death for each year increase
+in age, the 95% confidence interval is a 1% decrease to a 5% increase. Since the CI for the HR
+spans 1, the effect of age is not statistically significant. However, the hazard ratios for stage
+and associated p-values hardly change.
+
+Question 6.2.: Obtain the hazard ratio for an increase in age of 10 years. Has the significance
+level of the age effect become stronger?
+. lincom 10*age, hr
+
+5
+
+Biostatistics 209
+( 1)
+
+Lab #1
+
+10*age = 0
+
+-----------------------------------------------------------------------------_t | Haz. Ratio
+Std. Err.
+z
+P>|z|
+[95% Conf. Interval]
+-------------+---------------------------------------------------------------(1) |
+1.208063
+.1721615
+1.33
+0.185
+.91366
+1.59733
+------------------------------------------------------------------------------
+
+The effect of age (in decades) is a 21% increase in the hazard of death. 95% CI, 9% decrease
+to 60% increase, adjusting for stage. No, the test statistic (1.33) and thus the p-value are the
+same as in Question 5.1.
+
+Question 6.3.: Obtain the hazard ratio of a decrease in age of 10 years.
+. lincom -10*age, hr
+( 1)
+
+- 10*age = 0
+
+-----------------------------------------------------------------------------_t | Haz. Ratio
+Std. Err.
+z
+P>|z|
+[95% Conf. Interval]
+-------------+---------------------------------------------------------------(1) |
+.8277713
+.117966
+-1.33
+0.185
+.6260447
+1.094499
+------------------------------------------------------------------------------
+
+The effect of a 10-year decrease in age is a 17% decrease in the hazard of death. 95% CI, 9%
+increase to a 37% decrease, adjusting for stage.
+
+Question 6.4.: Verify that the hazard ratio and limits of its confidence interval in Question 6.3
+is the reciprocal (one divided by the value) of the corresponding values in
+Question 6.2.
+We see the correspondence below. The key thing is that the upper and lower limits of
+confidence intervals change places. The HR of 0.91 is the lower limit for a 10-year increase but
+it’s reciprocal 1.09 is the upper limit of the CI for a 10-year decrease.
+
+10 increase
+
+10 decrease
+
+HR
+
+1.20
+
+1/1.20 = 0.83
+
+limit of 95% CI
+
+0.91
+
+1/0.91 = 1.09
+
+limit of 95% CI
+
+1.60
+
+1/1.60 = 0.63
+
+6
+
+

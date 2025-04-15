@@ -1,0 +1,648 @@
+Biostatistics 209, Lab #2 Discussion
+3. Unadjusted and Adjusted Effect
+load directory_location/pbc.dat
+stset years, failure(status)
+
+• Examine the effect of sex (1=female, 0=male) on survival both graphically and in a Cox model
+sts graph, by(sex)
+stcox sex
+No. of subjects =
+No. of failures =
+Time at risk
+=
+
+312
+125
+1713.853528
+
+Log likelihood
+
+-638.09345
+
+=
+
+Number of obs
+
+=
+
+312
+
+LR chi2(1)
+Prob > chi2
+
+=
+=
+
+3.77
+0.0521
+
+-----------------------------------------------------------------------------_t | Haz. Ratio
+Std. Err.
+z
+P>|z|
+[95% Conf. Interval]
+-------------+---------------------------------------------------------------sex |
+.6163198
+.145757
+-2.05
+0.041
+.3877043
+.9797418
+------------------------------------------------------------------------------
+
+Women are at lower risk of death (38% reduction) compared to men. Alternatively, you
+could state that the hazard ratio of death for men is 1.62=1/.616 (a 62% increase).
+• Fit a model adjusting for the effect of sex on the following possible confounding variables:
+age, log bilirubin (logbili) and triglycerides (trigli)
+stcox sex age logbili trigli
+No. of subjects =
+No. of failures =
+Time at risk
+=
+
+282
+113
+1538.294321
+
+Log likelihood
+
+-494.55422
+
+=
+
+Number of obs
+
+=
+
+282
+
+LR chi2(4)
+Prob > chi2
+
+=
+=
+
+137.63
+0.0000
+
+-----------------------------------------------------------------------------_t | Haz. Ratio
+Std. Err.
+z
+P>|z|
+[95% Conf. Interval]
+-------------+---------------------------------------------------------------sex |
+1.018364
+.2589741
+0.07
+0.943
+.6186412
+1.676359
+age |
+1.0439
+.009745
+4.60
+0.000
+1.024974
+1.063176
+logbili |
+3.098469
+.3423258
+10.24
+0.000
+2.495195
+3.847599
+trigli |
+.9975208
+.0014368
+-1.72
+0.085
+.9947087
+1.000341
+------------------------------------------------------------------------------
+
+Extra question: which variable(s) has missing values?
+• Interpret the results.
+The hazard ratio for female sex (adjusting for bilirubin, age and triglycerides) is 1.02
+(p=0.943) with 95% CI (0.62 to 1.68). After adjustment, the sex difference in mortality
+did not reach statistical significance.
+1
+
+Biostatistics 209
+
+Lab #2
+
+4. Statistical Interaction
+Consider an interaction between sex and baseline level of copper in the urine (copper).
+•
+•
+
+Fit the interaction model
+
+stcox sex##c.copper, nolog
+
+Question 4.1: Does there appear to be a significant interaction?
+No. of subjects =
+No. of failures =
+Time at risk
+=
+
+310
+124
+1706.466806
+
+Number of obs
+
+=
+
+310
+
+LR chi2(3)
+=
+64.60
+Log likelihood =
+-601.59901
+Prob > chi2
+=
+0.0000
+-----------------------------------------------------------------------------_t | Haz. Ratio
+Std. Err.
+z
+P>|z|
+[95% Conf. Interval]
+-------------+---------------------------------------------------------------1.sex |
+.3901488
+.1581514
+-2.32
+0.020
+.1762729
+.863525
+copper |
+1.001955
+.0019675
+0.99
+0.320
+.9981062
+1.005819
+|
+sex#c.copper |
+1 |
+1.006169
+.0021351
+2.90
+0.004
+1.001993
+1.010362
+------------------------------------------------------------------------------
+
+We see that the interaction term is highly significant, p = 0.004.
+•
+
+Questions 4.2 & 4.3: Consider the use of the following tables to derive the lincom statements
+for a 10 unit change in urine copper for female and male subjects
+Female Subjects
+
+copper = x+10
+copper = x
+difference
+
+sex
+1
+1
+0
+
+copper
+x+10
+x
+10
+
+Male Subjects
+
+interaction
+x+10
+x
+10
+
+sex
+0
+0
+0
+
+copper
+x+10
+x
+10
+
+interaction
+0
+0
+0
+
+Which leads to
+For males:
+lincom 10*copper, hr
+-----------------------------------------------------------------------------_t | Haz. Ratio
+Std. Err.
+z
+P>|z|
+[95% Conf. Interval]
+-------------+---------------------------------------------------------------(1) |
+1.019723
+.0200241
+0.99
+0.320
+.9812226
+1.059735
+------------------------------------------------------------------------------
+
+The effect of a 10-unit increase in copper among men is an 2% increase in the hazard
+of death (p=0.32), 95% confidence interval ( -2% to +6%).
+For females:
+
+lincom 10*copper + 10* 1.sex#c.copper, hr
+
+-----------------------------------------------------------------------------_t | Haz. Ratio
+Std. Err.
+z
+P>|z|
+[95% Conf. Interval]
+-------------+---------------------------------------------------------------(1) |
+1.084404
+.0091777
+9.57
+0.000
+1.066564
+1.102542
+------------------------------------------------------------------------------
+
+The effect of a 10-unit increase in copper among women is an 8% increase in the
+hazard of death (p < 0.0001), 95% confidence interval (7% to 10%).
+2
+
+Biostatistics 209
+
+Lab #2
+
+It appears that copper increases the risk of death for both sexes, but that such an
+effect is much more pronounced in women than in men. In men, copper is not a
+statistically significant predictor of mortality.
+•
+
+Fill out the following tables to derive the relative hazard between the sexes at a copper of 17,
+73 and 256 (the 5%, 50%, and 95%-ile of copper values)
+Copper of
+
+17
+
+73
+
+sex
+
+copper
+
+interaction
+
+sex
+
+copper
+
+interaction
+
+Female
+
+1
+
+17
+
+17
+
+1
+
+73
+
+73
+
+Male
+
+0
+
+17
+
+0
+
+0
+
+73
+
+0
+
+difference
+
+1
+
+0
+
+17
+
+1
+
+0
+
+73
+
+Copper of
+
+256
+sex
+
+copper
+
+interaction
+
+Female
+
+1
+
+256
+
+256
+
+Male
+
+0
+
+256
+
+0
+
+difference
+
+1
+
+0
+
+256
+
+Which leads to
+
+lincom 1.sex +
+
+Copper of 17
+
+17* 1.sex#c.copper, hr
+
+-----------------------------------------------------------------------------_t | Haz. Ratio
+Std. Err.
+z
+P>|z|
+[95% Conf. Interval]
+-------------+---------------------------------------------------------------(1) |
+.4331466
+.1632321
+-2.22
+0.026
+.2069465
+.9065917
+------------------------------------------------------------------------------
+
+Copper of 73
+lincom 1.sex +
+
+73* 1.sex#c.copper, hr
+
+-----------------------------------------------------------------------------_t | Haz. Ratio
+Std. Err.
+z
+P>|z|
+[95% Conf. Interval]
+-------------+---------------------------------------------------------------(1) |
+.6112276
+.1802483
+-1.67
+0.095
+.3429157
+1.089478
+------------------------------------------------------------------------------
+
+Copper of 256
+lincom 1.sex +
+
+256* 1.sex#c.copper, hr
+
+-----------------------------------------------------------------------------_t | Haz. Ratio
+Std. Err.
+z
+P>|z|
+[95% Conf. Interval]
+-------------+---------------------------------------------------------------(1) |
+1.883519
+.6074192
+1.96
+0.050
+1.001071
+3.543851
+------------------------------------------------------------------------------
+
+•
+
+Interpret the results
+
+We see that at a copper of 17, 73 and 256: the hazard ratios vary from 0.43, 0.61, to 1.88.
+Suggesting that women are at lower risk of death with lower values of copper and at
+higher risk as the copper values increase.
+3
+
+Biostatistics 209
+•
+
+Lab #2
+
+It can be helpful to graph the interaction. It is most easily visualized on the log hazard scale
+(i.e., on the scale of the b coefficients).
+(calculate the log hazard and put them
+in variable “out”)
+
+predict out, xb
+
+-- Now, use the Stata menus to graphs the log hazards for female and male subjects by copper.
+o Go to, “Graphics”, “Twoway graph”
+o Click “Create”, select “Basic Plot” and “Line” as plot type
+o Y-variable: out, X-variable: copper Click on box “Sort on x variable”
+o Click on the tab “if/in”, fill in “sex==0” and click “Accept”
+o Click “Edit”
+o Click on “Line Properties”, select “Red” for Line Color and click “Accept”
+o Click “Accept”
+o Click “Create” again (repeating the above steps for another line in different color),
+select “Basic Plot” and “Line” as plot type
+o Y-variable: out, X-variable: copper Click on box “Sort on x variable”
+o Click on the tab “if/in”, fill in “sex==1” and click “Accept”
+o Look at the Tabs at the Top
+o Click on “Y-axis”, fill in Log Hazard Ratio under Title
+o Click on “Legend”, Check “Override Default Keys”
+o Fill in 1 "Male" 2 "Female" under “Specify order of keys.....”
+o Click on “X axis” and then click on “Reference lines”
+o Check “Add lines to graph at specified
+x axis values” and type “17 73 153
+256” in box
+o Pattern select “Dash dot”
+o Color select “Green”
+o Click "submit"
+
+The sequence of Stata menu commands is
+equivalent to:
+twoway (line out copper if sex==0, sort lcolor(red)) (line out copper if
+sex==1, sort lcolor(blue)), ytitle(Log Hazard Ratio) xline(17 73 153
+256, lpattern(dash_dot) lcolor(green)) legend(order(1 "Male" 2
+"Female"))
+
+4
+
+Biostatistics 209
+
+Lab #2
+
+We see from the graph that men have a higher risk of death than women at lower levels of
+copper.
+At a copper value of 153 the above lincom equation (i.e., lincom 1.sex + 153 *
+1.sex#c.copper) would lead to b=0, i.e., HR=1. -- leading to -1 times the ratio of the
+coefficient for sex to the coefficient for interaction =
+-log(.3901488)/log(1.006169)=153), the curves cross and then men are at lower
+risk than women. We could call this a qualified interaction, since the comparison of which
+sex has a better prognosis changes places in different ranges of values for copper.
+You could save estimates of the coefficients (log hazard ratios) by
+matrix giveAname =e(b)
+
+(to save the values of coefficients)
+
+matrix list giveAname
+
+(to see the values of log hazards ratios)
+
+giveAname [1,5]
+
+y1
+
+0b.
+
+1.
+
+sex
+
+sex
+
+0
+
+-.94122708
+
+0b.sex#
+
+1.sex#
+
+copper
+
+co.copper
+
+c.copper
+
+.00195315
+
+0
+
+.00614988
+
+then do the calculation as
+display -giveAname[1,2] / giveAname[1,5]
+153.04806
+
+Also, notice that higher copper is a considerably more adverse marker for women
+compared to men.
+This graph reveals the awkward estimated sex effect of HR=0.39, which represents a log
+hazard ratio of -0.94 for women compared to men based on a copper value of zero perhaps not the best value of copper for comparison of the sexes. The reference value
+could be changed, e.g., by centering copper to its mean value. These graphs may not be
+ideal for publication in a paper, but they provide a useful tool for understanding the nature
+and direction of an interaction.
+5. Adjusted Survival Curves
+Return to the issue we considered in question 3, the effect of sex on mortality after adjusting for log
+bilirubin, age and triglycerides.
+•
+
+Re-run (or restore) the adjusted regression
+stcox sex age logbili trigli
+
+•
+
+Graph the adjusted survival curve.
+
+5
+
+Biostatistics 209
+
+Lab #2
+
+stcurve, survival at1(sex=0) at2(sex=1)
+
+What values of age, logbili and trigli are the curves adjusted at?
+•
+
+Regraph the Kaplan-Meiers for comparison
+sts graph, by(sex)
+
+You can tweak the graphs to label them better. The commands to use are
+stcurve, survival at1( sex=0 ) at2( sex=1 ) title("Cox Regression")
+legend(order(1 "Male" 2 "Female")) ytitle("Proportion Surviving")
+scheme(s1color)
+sts graph, by(sex) title("Kaplan-Meier estimates") legend(order(1 "Male"
+2 "Female")) ytitle("Proportion Surviving") scheme(s1color)
+Kaplan-Meier survival estimates
+
+.2
+
+0.00
+
+.4
+
+0.25
+
+0.50
+
+Survival
+.6
+
+.8
+
+0.75
+
+1
+
+1.00
+
+Cox proportional hazards regression
+
+0
+
+5
+
+10
+
+15
+
+0
+
+analysis time
+sex=0
+
+5
+
+analysis time
+
+sex = Male
+
+sex=1
+
+6
+
+10
+sex = Female
+
+15
+
+

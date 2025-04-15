@@ -1,0 +1,97 @@
+---
+title: "Biostatistics 209 - Homework 1"
+author: "Anya DeCarlo"
+date: "April 14, 2025"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 2
+    number_sections: true
+    highlight: tango
+    keep_tex: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+# Load required packages
+
+library(tidyverse)
+library(knitr)
+library(ggplot2)
+library(survival)
+library(gtsummary)
+library(survminer)
+library(biostat3)
+library(readstata13)
+```
+
+# Introduction
+
+This document contains my solutions for Homework 1 of Biostatistics 209.
+
+# Question 1
+
+```{r}
+
+pbc <- read.dta13("~/biostats_209/Data/pbchw.dta")
+
+# Examine dataset structure
+head(pbc)
+str(pbc$histol)
+table(pbc$histol)
+
+```
+
+## Part A
+
+```{r problem1a}
+
+# Convert histology to a factor with appropriate grade labels
+pbc$histol <- factor(pbc$histol, levels=1:4, 
+                    labels=c("Grade 1", "Grade 2", "Grade 3", "Grade 4"))
+
+# Fit Cox proportional hazards model with histology and bilirubin as covariates
+cox.model <- coxph(Surv(years, status) ~ histol + bilirubin, data = pbc)
+
+# Display a detailed summary of the model
+summary(cox.model)
+
+# Present results in a clean table with exponentiated coefficients (HRs) and 95% CIs
+tbl_regression(cox.model,
+               exponentiate = TRUE,   # show hazard ratios instead of log(HR)
+               conf.level = 0.95)     # 95% confidence intervals
+
+# Likelihood ratio test for histology effect
+# Fit model without histology
+reduced.model <- coxph(Surv(years, status) ~ bilirubin, data = pbc)
+
+# Perform likelihood ratio test
+lr.test <- anova(reduced.model, cox.model)
+lr.test
+
+```
+
+## Part B
+
+```{r problem1b}
+# Your R code for problem 1b goes here
+
+```
+
+# Problem 2
+
+```{r problem2}
+# Your R code for problem 2 goes here
+
+```
+
+# Problem 3
+
+```{r problem3}
+# Your R code for problem 3 goes here
+
+```
+
+# Conclusion
+
+Summary of findings and conclusions from the homework problems.
