@@ -1,20 +1,17 @@
----
+\---
 title: "Biostatistics 209 - Homework 1"
 author: "Anya DeCarlo"
 date: "April 14, 2025"
 output:
-  pdf_document:
+  word_document:
     toc: true
     toc_depth: 2
-    number_sections: true
     highlight: tango
-    keep_tex: false
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 # Load required packages
-
 library(tidyverse)
 library(knitr)
 library(ggplot2)
@@ -25,33 +22,30 @@ library(biostat3)
 library(readstata13)
 ```
 
-# Introduction
+#####  Week 1: Chapters 6.1-6.2.4, VGSM
 
-This document contains my solutions for Homework 1 of Biostatistics 209.
+##### Week 2: Chapters 6.2.5-6.2.13, VGSM
 
 # Question 1
-
+#### [5 points]: Fit a Cox proportional hazards model to the PBC dataset with histology and bilirubin as covariates. The PBC dataset includes information on the primary biliary cirrhosis (PBC) status of patients. The observed survival time is the time until death or censoring, whichever occurred first, recorded in the ‘years’ column. The failure status of each patient is recorded in the ‘status’ column.
 ```{r}
-
+# Load the PBC dataset
 pbc <- read.dta13("~/biostats_209/Data/pbchw.dta")
-
-# Examine dataset structure
-head(pbc)
-str(pbc$histol)
-table(pbc$histol)
-
 ```
 
-## Part A
 
-```{r problem1a}
+## Part 0
+```{r problem1}
 
 # Convert histology to a factor with appropriate grade labels
 pbc$histol <- factor(pbc$histol, levels=1:4, 
                     labels=c("Grade 1", "Grade 2", "Grade 3", "Grade 4"))
 
+# Convert status to numeric (1 = Dead, 0 = Censored)
+pbc$status_numeric <- ifelse(pbc$status == "Dead", 1, 0)
+
 # Fit Cox proportional hazards model with histology and bilirubin as covariates
-cox.model <- coxph(Surv(years, status) ~ histol + bilirubin, data = pbc)
+cox.model <- coxph(Surv(years, status_numeric) ~ histol + bilirubin, data = pbc)
 
 # Display a detailed summary of the model
 summary(cox.model)
@@ -61,37 +55,218 @@ tbl_regression(cox.model,
                exponentiate = TRUE,   # show hazard ratios instead of log(HR)
                conf.level = 0.95)     # 95% confidence intervals
 
+```
+
+## Part A
+#### a. [2 points] Adjusting for bilirubin, does histology appear to be a (categorical) predictor of risk of death? Perform the likelihood ratio test to verify it and summarize the result of the test.
+
+
+```{r problem1a}
+
 # Likelihood ratio test for histology effect
 # Fit model without histology
-reduced.model <- coxph(Surv(years, status) ~ bilirubin, data = pbc)
+reduced.model <- coxph(Surv(years, status_numeric) ~ bilirubin, data = pbc)
 
 # Perform likelihood ratio test
-lr.test <- anova(reduced.model, cox.model)
+lr.test <- anova(reduced.model, cox.model, test = "LRT")
 lr.test
-
 ```
+The likelihood ratio test comparing the model with both histology and bilirubin to the model with bilirubin alone yields χ² = 42.218, df = 3, p = 3.608e-09. The result is significant at the 0.001 level, p < 0.001, providing strong evidence that histology is a significant predictor of risk of death after adjusting for bilirubin.
 
-## Part B
+
+## Part B 
+#### [2 points] Calculate the three HRs and their confidence intervals: Grade 1 vs. Grade 2, Grade 2 vs. Grade 3, Grade 3 vs. Grade 4 histology. Give a brief in-terpretation of the results. 
+
 
 ```{r problem1b}
-# Your R code for problem 1b goes here
+
+# Calculate hazard ratios between adjacent histology grades
+# Grade 1 vs Grade 2
+hr_1vs2 <- lincom(cox.model, "histolGrade 2", eform = TRUE)
+
+# Grade 2 vs Grade 3
+hr_2vs3 <- lincom(cox.model, "histolGrade 3 - histolGrade 2", eform = TRUE)
+
+# Grade 3 vs Grade 4
+hr_3vs4 <- lincom(cox.model, "histolGrade 4 - histolGrade 3", eform = TRUE)
+
+# Display hazard ratios
+hr_1vs2
+hr_2vs3
+hr_3vs4
 
 ```
+ The hazard ratio comparing Grade 2 to Grade 1 histology is 4.46 (95% CI 0.59-33.68, p = 0.147).
+ The hazard ratio comparing Grade 3 to Grade 2 histology is 1.48 (95% CI 0.83-2.64, p = 0.184)
+ The hazard ratio comparing Grade 4 to Grade 3 histology is 2.43 (95% CI 1.65-3.58, p < 0.001).
+ These results demonstrate a stepwise increase in mortality risk across histology grades, with only the Grade 4 vs Grade 3 comparison reaching statistical significance (HR=2.43, p<0.001), suggesting that advanced histological damage is particularly associated with poor prognosis in PBC patients.
+
+## Part C
+#### [1 point] Perform a test for trend to investigate the association between in-creasing grade of histology and risk of death. Provide an interpretation of the result, including the direction of effect. 
+
+```{r problem1c}
+fit.trend <- coxph(Surv(years, status_numeric) ~ ordered(histol), data = pbc)
+summary(fit.trend)
+```
+The test for trend shows a strong positive linear association between increasing histology grade and mortality risk (HR=8.81 for the linear component, 95% CI 2.32-33.41, p=0.001), indicating that higher grades of histological damage are significantly associated with progressively worse survival outcomes in PBC patients. 
 
 # Problem 2
 
-```{r problem2}
-# Your R code for problem 2 goes here
+## Part A
+
+#### [3 points]: In the same model as you used in Question 1, Conduct a likelihood ratio test to evaluate whether bilirubin is associated with survival after adjusting for histology. Compare the results to the Wald test (aka Z test).
+
+```{r problem2a}
+
+# Likelihood ratio test for histology effect
+# Fit model without histology
+reduced.model <- coxph(Surv(years, status_numeric) ~ histol, data = pbc)
+
+# Perform likelihood ratio test
+lr.test <- anova(reduced.model, cox.model, test = "LRT")
+lr.test
+
+# Compare LR test to Wald test for bilirubin effect
+# The Wald test results are in the summary of the full model
+summary(cox.model)
+
+# Extract just the bilirubin coefficient and its test statistics for comparison
+bilirubin_row <- summary(cox.model)$coefficients["bilirubin",]
+z_stat <- bilirubin_row["z"]
+p_value <- bilirubin_row["Pr(>|z|)"]
+cat("Wald test for bilirubin: Z =", round(z_stat, 3), 
+    ", p-value =", format(p_value, digits=4), "\n")
 
 ```
+The likelihood ratio test comparing models with and without bilirubin (adjusting for histology) yields χ² = 110.06, df = 1, p < 2e-16, providing strong evidence that bilirubin is significantly associated with survival. This is consistent with the Wald test results (Z = 10.506, p = 8.122e-26), confirming that higher bilirubin levels are associated with increased mortality risk (HR = 1.158 per 1 mg/dL increase, 95% CI: 1.127-1.19).
+
+## Part B 
+#### [1 point] Calculate the hazard ratio and its confidence interval for death associated with a one standard deviation increase in bilirubin. (Use the sample standard deviation of bilirubin calculated from the dataset.)
+
+
+```{r problem2b}
+
+# Calculate the standard deviation of bilirubin
+sd_bilirubin <- sd(pbc$bilirubin, na.rm = TRUE)
+
+# Extract the coefficient and standard error for bilirubin
+bili_coef <- coef(cox.model)["bilirubin"]
+bili_se <- summary(cox.model)$coefficients["bilirubin", "se(coef)"]
+
+# Calculate the standard deviation of bilirubin
+sd_bilirubin <- sd(pbc$bilirubin, na.rm = TRUE)
+
+# Use lincom to get HR for a one SD increase in bilirubin
+hr_sd_bili <- lincom(cox.model, paste0(sd_bilirubin, " * bilirubin"), eform = TRUE)
+hr_sd_bili
+
+```
+
+## Part C 
+#### [1 point] By how many mg/dL must bilirubin increase to double the risk of death (i.e., to yield a hazard ratio of 2)?
+
+```{r problem2c}
+# Get the coefficient for bilirubin from the model
+bili_coef <- coef(cox.model)["bilirubin"]
+
+# Find x such that exp(bili_coef * x) = 2
+# Taking natural log of both sides: bili_coef * x = log(2)
+bilirubin_increase <- log(2) / bili_coef
+
+# Display the result
+cat("Bilirubin must increase by", round(bilirubin_increase, 2), "mg/dL to double the risk of death")
+```
+
 
 # Problem 3
+#### Question 3 [5 points]: Taken from VGSM: problem 6.8 (new edition) / 7.6 (old edition).Note that for parts a) and b) you do not need Stata, just give expressions
+#### For the ACTG 019 data set, the Cox model allowing for an interaction between ZDV treatment rx and the baseline CD4 cell count cd4 is:h(days | rx, cd4, interaction)=h0(days)* exp( β1 * rx + β2 * cd4 + β3 * interaction )
+
+## Part 0 
 
 ```{r problem3}
-# Your R code for problem 3 goes here
+
+actg <- read.dta13("~/biostats_209/Data/actg019.dta", nonint.factors = TRUE)
+
+# For the ACTG 019 data set, the Cox model allowing for an interaction between ZDV treatment rx and the baseline CD4 cell count cd4 is:
+# h(days | rx, cd4, interaction)=h0(days)* exp( β1 * rx + β2 * cd4 + β3 * interaction )
 
 ```
 
-# Conclusion
+## Part A 
+#### [1 point] Express the test of the null hypothesis of no interaction between CD4 and treatment in terms of the parameters of the model. Note: In this Cox model, the parameters of interest are β1, β2, and β3.
 
-Summary of findings and conclusions from the homework problems.
+```{r problem3a, echo=FALSE, results='asis'}
+cat("$H_0: \\beta_3 = 0$")
+```
+
+## Part B 
+#### [1 point] Again based on the parameters of the model, determine (as an expression) the hazard ratio for a ZDV-treated subject with x CD4 cells compared with a placebo-treated subject with x CD4 cells?
+
+```{r problem3b, echo=FALSE, results='asis'}
+cat("
+$$
+\\begin{align}
+\\textbf{Step 1:} & \\text{ Write the hazard function for a ZDV-treated subject (rx=1) with $x$ CD4 cells:} \\\\
+h_{ZDV} &= h_0(\\text{days}) \\cdot \\exp(\\beta_1 \\cdot 1 + \\beta_2 \\cdot x + \\beta_3 \\cdot (1 \\cdot x)) \\\\
+&= h_0(\\text{days}) \\cdot \\exp(\\beta_1 + \\beta_2 \\cdot x + \\beta_3 \\cdot x) \\\\
+\\\\
+\\textbf{Step 2:} & \\text{ Write the hazard function for a placebo-treated subject (rx=0) with $x$ CD4 cells:} \\\\
+h_{placebo} &= h_0(\\text{days}) \\cdot \\exp(\\beta_1 \\cdot 0 + \\beta_2 \\cdot x + \\beta_3 \\cdot (0 \\cdot x)) \\\\
+&= h_0(\\text{days}) \\cdot \\exp(\\beta_2 \\cdot x) \\\\
+\\\\
+\\textbf{Step 3:} & \\text{ Calculate the hazard ratio by dividing:} \\\\
+HR &= \\frac{h_{ZDV}}{h_{placebo}} \\\\
+&= \\frac{h_0(\\text{days}) \\cdot \\exp(\\beta_1 + \\beta_2 \\cdot x + \\beta_3 \\cdot x)}{h_0(\\text{days}) \\cdot \\exp(\\beta_2 \\cdot x)} \\\\
+&= \\exp(\\beta_1 + \\beta_3 \\cdot x)
+\\end{align}
+$$")
+```
+
+## Part C 
+#### [2 points] Fit the model. Does there appear to be an interaction between treatment and CD4 stratum? If so, what is the interpretation?
+
+```{r problem3c}
+
+# Convert cens from factor (1=Censored, 2=AIDS/Death) to numeric (0=Censored, 1=Event)
+actg$cens_numeric <- as.numeric(actg$cens) - 1  # Convert 1,2 to 0,1
+
+# Fit Cox model with interaction between rx (treatment) and cd4 (CD4 count)
+interaction_model <- coxph(Surv(days, cens_numeric) ~ rx + cd4 + rx:cd4, data = actg)
+
+# Display model results
+summary(interaction_model)
+```
+We see that the interaction term is significant at the 0.05 level, p = 0.037643, indicating that the effect of CD4 cell count on the hazard of AIDS/Death is different between ZDV-treated and placebo-treated subjects.
+The interaction hazard ratio exp(β₃) gives the ratio of the ZDV treatment effects for each one-unit difference in CD4 count. In our model results, the estimated hazard ratio for rx:cd4 indicates how the treatment effect changes with CD4 level. 
+The estimated hazard ratio for rxZDV:cd4 is 0.9941 (95% CI 0.9885-0.9997, p = 0.037643). From this we understand that for each unit increase in CD4 count, the treatment effect of ZDV (compared to placebo) is multiplied by a factor of 0.9941.
+The hazard ratio is less than 1 and the confidence interval does not include 1, we can interpret this as:
+
+For each additional CD4 cell, the benefit of ZDV treatment increases slightly (the hazard ratio for ZDV vs. placebo decreases by about 0.6% per CD4 cell)
+This suggests that patients with higher CD4 counts tend to benefit more from ZDV treatment than those with lower CD4 counts
+The narrow confidence interval (0.9885-0.9997) indicates we can be fairly confident about this effect, though the upper bound is very close to 1
+The significant p-value (0.037643) confirms that this interaction effect is statistically significant at the conventional 0.05 level
+This finding suggests that CD4 count is an important factor to consider when evaluating the potential benefits of ZDV treatment for individual patients.
+
+
+```{r problem3d}
+
+# Hazard ratios for ZDV as compared to placebo 
+# for patients with 500, 109, and 50 CD4 cells, respectively?
+
+# For CD4 = 500
+hr_500 <- lincom(interaction_model, "rxZDV + 500*rxZDV:cd4", eform = TRUE)
+hr_500
+
+# For CD4 = 109
+hr_109 <- lincom(interaction_model, "rxZDV + 109*rxZDV:cd4", eform = TRUE)
+hr_109
+
+# For CD4 = 50
+hr_50 <- lincom(interaction_model, "rxZDV + 50*rxZDV:cd4", eform = TRUE)
+hr_50
+
+```
+The hazard ratio for ZDV compared to placebo among patients with CD4 count of 500 cells is 0.095 (95% CI 0.018-0.509, p = 0.006)
+The hazard ratio for ZDV compared to placebo among patients with CD4 count of 109 cells is 0.962 (95% CI 0.403-2.298, p = 0.930).
+The hazard ratio for ZDV compared to placebo among patients with CD4 count of 50 cells is 1.365 (95% CI 0.441-4.225, p = 0.589)
