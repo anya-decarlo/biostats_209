@@ -1,0 +1,205 @@
+---
+title: "Biostatistics 209 - Homework 2"
+author: "Anya DeCarlo"
+date: "April 25, 2025"
+output:
+  word_document:
+    toc: true
+    toc_depth: 2
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(tidyverse)
+library(knitr)
+library(ggplot2)
+library(survival)
+library(gtsummary)
+library(survminer)
+library(biostat3)
+library(readstata13)
+library(dplyr)
+library(haven)
+library(pander)
+```
+
+#####  Week 3: Chapters 6.3-6.5, VGSM
+
+# Question 3
+#### 3. [5 points] For the variable age in the pbc dataset, check the proportional hazards assumption. Please find relevant R code in the Survival Lab #3 supplemental materials. 
+```{r}
+# Load the PBC dataset
+pbc <- read.dta13("~/biostats_209/Data/pbchw.dta")
+colnames(pbc)
+```
+
+
+## Part A
+#### (a)	[1 point] Generate log-log plot or plot Kaplan-Meier curves with predicted survival under Cox model.  Note, for this question, you will need to create a grouped version of age. Use the cut command in R: 
+```{r problem3}
+
+# Convert status to numeric if needed
+pbc$status_numeric <- ifelse(pbc$status == "Dead", 1, 0)
+
+# Create age groups using the specified cutpoints from the instructions
+pbc$age_group <- cut(pbc$age, breaks = c(25, 40, 50, 60, 80), 
+                     labels = c("25-39", "40-49", "50-59", "60-79"))
+
+# Fit Kaplan-Meier and Cox models
+km.fit <- survfit(Surv(years, status_numeric) ~ age_group, data = pbc)
+cox.fit <- coxph(Surv(years, status_numeric) ~ age_group, data = pbc)
+
+# Get Cox predicted survival
+newdata <- data.frame(age_group = levels(pbc$age_group))
+cox.pred <- survfit(cox.fit, newdata = newdata)
+
+# Tidy survival estimates
+km.df <- surv_summary(km.fit, data = pbc) %>%
+  mutate(model = "KM")
+cox.df <- surv_summary(cox.pred, data = newdata) %>%
+  mutate(model = "Cox")
+
+# Ensure consistent strata naming across both datasets
+km.df$strata <- gsub("age_group=", "", km.df$strata)
+cox.df$strata <- levels(pbc$age_group)[as.numeric(cox.df$strata)]
+
+# Combine into one data frame
+plot.df <- bind_rows(km.df, cox.df)
+
+# Plot: solid = KM, dashed = Cox
+ggplot(plot.df, aes(x = time, y = surv, color = strata, linetype = model)) +
+  geom_step(aes(size = model)) +
+  scale_linetype_manual(
+    values = c("KM" = "solid", "Cox" = "dashed"),
+    labels = c("KM" = "Kaplan-Meier (Observed)", "Cox" = "Cox Model (Predicted)")
+  ) +
+  scale_size_manual(
+    values = c("KM" = 0.8, "Cox" = 1.0),
+    guide = "none"  # Hide size from legend
+  ) +
+  scale_color_manual(
+    values = c("25-39" = "#052049", "40-49" = "#32A03E", 
+               "50-59" = "#6C62D0", "60-79" = "#C42882"),
+    labels = function(x) paste0(x)  # Remove any prefix
+  ) +
+  labs(
+    title = "Kaplan-Meier and Cox Predicted Survival by Age Group",
+    x = "Time (years)",
+    y = "Survival Probability",
+    color = "Age Group",
+    linetype = "Model Type"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "right",
+    legend.box = "vertical",
+    legend.margin = margin(6, 6, 6, 6),
+    legend.key.width = unit(2, "cm"),
+    legend.text = element_text(size = 9)
+  )
+```
+
+
+## Part B
+#### (b) [1 point] Using Smoothed hazard ratios for the continuous variable age.
+```{r problem3b}
+# Fit a Cox model with age as a continuous predictor
+cox.age <- coxph(Surv(years, status_numeric) ~ age, data = pbc)
+summary(cox.age)
+
+# Test the proportional hazards assumption using Schoenfeld residuals
+test.ph <- cox.zph(cox.age, transform = "identity")
+test.ph
+
+# Extract the Schoenfeld residuals and time values
+schoen.age <- data.frame(
+  time = test.ph$time,
+  schoen.residuals = test.ph$y[,1]  # Extract residuals for age
+)
+
+# Plot the Schoenfeld residuals with a lowess smoother
+ggplot(schoen.age, aes(x = time, y = schoen.residuals)) +
+  geom_point(color = "#052049", alpha = 0.5) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+  geom_smooth(method = "loess", span = 0.8, se = TRUE, color = "#C42882") +
+  labs(
+    title = "Schoenfeld Residuals for Age with Lowess Smoother",
+    x = "Time (years)",
+    y = "Schoenfeld Residuals for Age",
+    subtitle = "Testing Proportional Hazards Assumption"
+  ) +
+  theme_minimal()
+
+# Apply lowess smoother to approximate time-dependent coefficient for age
+loess.fit <- loess(schoen.residuals ~ time, data = schoen.age, span = 0.8)
+
+# Create a sequence of time points for prediction
+time.seq <- seq(0, max(schoen.age$time), length.out = 100)
+pred.df <- data.frame(
+  time = time.seq,
+  beta = predict(loess.fit, newdata = data.frame(time = time.seq)),
+  beta.coef = coef(cox.age)["age"]
+)
+
+# Calculate the time-varying log hazard ratio and hazard ratio
+pred.df$log.hr <- pred.df$beta + pred.df$beta.coef
+pred.df$hr <- exp(pred.df$log.hr)
+
+# Plot the smoothed hazard ratios over time
+ggplot(pred.df, aes(x = time, y = hr)) +
+  geom_line(color = "#32A03E", size = 1.2) +
+  geom_hline(yintercept = exp(coef(cox.age)["age"]), 
+             linetype = "dashed", color = "#052049") +
+  labs(
+    title = "Smoothed Hazard Ratio for Age Over Time",
+    subtitle = "Values above the dashed line indicate higher effect than average",
+    x = "Time (years)",
+    y = "Hazard Ratio for Age (per year increase)"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5)
+  )
+```
+
+## Part C
+#### (c)	[1 point] Perform the Schoenfeld test for the continuous variable age.
+
+```{r problem3c}
+# Fit Cox model with age as continuous predictor
+cox.age.test <- coxph(Surv(years, status_numeric) ~ age, data = pbc)
+
+# Perform the Schoenfeld test with identity transformation of time
+test.ph <- cox.zph(cox.age.test, transform = "identity")
+print(test.ph)
+
+# Alternative tests: Pearson and Spearman correlations between residuals and time
+print("Pearson correlation test:")
+print(cor.test(test.ph$time, test.ph$y[,1], method = "pearson"))
+
+print("Spearman correlation test:")
+print(cor.test(test.ph$time, test.ph$y[,1], method = "spearman"))
+
+tbl_regression(cox.age.test, exponentiate = TRUE)
+ 
+# Fit a Cox model with age_group as a categorical variable
+cox.age.group <- coxph(Surv(years, status_numeric) ~ age_group, data = pbc)
+
+# Display the results with hazard ratios and confidence intervals
+summary(cox.age.group)
+
+# For a nicely formatted table
+tbl_regression(cox.age.group, exponentiate = TRUE)
+```
+
+## Part D
+#### (d)	Based on (a)-(c), what do you conclude? Are hazards for the variable age proportional? How would you report the effect (in terms of HR and 95%CI) of age in a paper?
+Based on part a-c, we conclude that the hazards for the variable age are proportional. 
+Under the proportional hazards assumption, the hazard ratio (HR) does not vary with time. 
+In part a, we plotted Kaplan-Meier curves with predicted survival under Cox model and from visual assessment, we can see that the Cox - predicted curves closely follow the Kaplan-Meier curves, supporting the proportional hazards assumption.
+In part b, we find minor evidence of a violation of the proportional hazards assumption for age, as we expect a smoother to be approximately flat, but instead we do not see this.
+We also find that the HR is not constant over time further supporting a violation of proportional hazards assumption.
+The Schoenfeld residuals for age: χ²=0.923, p=0.34 and Pearson/Spearman correlations: p=0.37 and p=0.25, which validates the proportional hazards assumption.
+In the Cox proportional hazards model, older age groups exhibited progressively higher risks of mortality compared to the 25-39 reference group. The 60-79 age group showed the strongest association (HR=3.20, 95% CI:1.69–6.07, p<0.001), followed by the 50-59 group (HR=2.07, 95% CI:1.12–3.84, p=0.021). No significant association was observed for the 40-49 group (HR=1.23, 95% CI:0.65–2.35, p=0.5). Proportional hazards assumptions were validated using Schoenfeld residuals (χ²=0.923, p=0.34) and correlation tests (Pearson p=0.37; Spearman p=0.25).
