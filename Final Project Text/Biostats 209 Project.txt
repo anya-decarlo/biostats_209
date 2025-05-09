@@ -1,0 +1,159 @@
+- Noticed Research Activities and Funding Project, NIH/NIA
+"advances our understanding of the determinants, outcomes, and amelioration of later life disability"
+AIM: Use de-identified electronic health data UCSF to address aging related phenomena that are:
+1. Clinically burdensome (frequent hard to manage)
+2. Economically draining (Increase LOS, leads to readmission or complications that aren't reimbursed,
+require high labor/resource use, labeled hospital acquired condition)
+3. Quality-of-life destroying
+
+Options.
+1. Delirium
+2. Falls(considered preventable CMS 'never events') and Fractures
+3. Dementia
+4. Incontinence
+5. Polypharmacy and Adverse Drug Events
+6. Readmissions in Frail Older Adults
+7. Pressure Ulcers (Hospital Acquired)
+
+Analysis (Research
+Key Variables
+Primary Method Why It Matters /
+Question)
+(EHR)
+(Book chapter §)
+Deliverable
+Incidence & case-mix
+One-/two-variable Baseline burden
+description – What
+Age, service, ICD‐
+summaries &
+estimate; informs
+1 proportion of ≥65 y inpatients 10 delirium code,
+stratified proportions sample size for
+develop delirium, and how
+admission type
+(§2.3–2.4)
+later models.
+does it vary by service line?
+Baseline vitals,
+Generates a
+Risk-factor screening score
+Multiple logistic
+labs, medication
+bedside “high-risk”
+2 – Which admission-day
+regression (§5.2) →
+list, dementia flag,
+flag; ROC/AUC
+factors best predict delirium?
+risk score
+sensory impairment
+report.
+#
+
+Analysis (Research
+Question)
+Time-to-onset – How
+quickly does delirium occur
+3
+after admission and which
+factors hasten it?
+
+Key Variables
+Primary Method Why It Matters /
+(EHR)
+(Book chapter §)
+Deliverable
+Time stamps for
+Adjusted hazard
+Cox proportional
+admission, first
+ratios; survival
+hazards model
+positive CAM/ICD
+curves by risk
+(§6.2)
+code; covariates
+strata.
+GLM with log-link
+Length-of-stay penalty –
+LOS (days),
+& gamma dist.
+Incremental cost
+How much extra LOS is
+delirium status,
+4
+(§8.1–8.3) or linear day estimate; feed
+attributable to delirium after comorbidity score,
+regression on
+to cost model.
+controlling for confounders? DRG
+log(LOS) (§4)
+30-day readmission risk – Readmission
+Odds ratios; cDoes delirium independently indicator, delirium, Logistic regression + statistic; showcases
+5
+predict Medicare readmission index LOS,
+LRT (§5.2.1, 5.2.5) hospital financial
+penalties?
+discharge dispo
+risk.
+In-hospital mortality
+mediation – Is the LOS
+Mortality flag,
+Mediation analysis
+6
+§5.2.3)
+increase partly mediating the delirium, LOS
+(§4.5
+delirium–mortality link?
+Interrupted time-series of
+Segmented
+Level & slope
+protocol rollout – Did a new Monthly incidence regression (GLM
+7
+change; evidence
+delirium-prevention bundle pre/post rollout date with time & phase
+for causal impact.
+reduce incidence?
+terms; §8.3)
+Competing-risks discharge Discharge
+Competing-risks
+Sub-distribution
+– Among delirious patients, is destination, frailty
+8
+Fine-Gray model
+HRs inform caredischarge to SNF vs home
+index, delirium
+(§6.5)
+transition planning.
+predicted by baseline frailty? onset day
+Repeated measures
+Population-level
+Daily CAM,
+trajectory – How do daily
+Linear mixed model trajectory plot;
+9
+mobility scale, day
+Mobility/CAM scores evolve
+/ GEE (§7.3–7.4)
+targets rehab
+index
+before, during, after delirium?
+timing.
+Causal effect via IPTW –
+Provides quasiMobilization order
+Estimate average treatment
+Marginal structural experimental
+within 24 h,
+10 effect of early mobilization
+model with IPTW evidence for an
+delirium,
+orders on delirium using
+(§9.1–9.4)
+actionable
+confounders
+inverse probability weighting.
+intervention.
+#
+
+

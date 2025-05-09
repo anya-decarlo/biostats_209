@@ -1,0 +1,36 @@
+---
+title: "Lab 2 Repeated Measures"
+author: "Anya DeCarlo"
+date: "May 8, 2025"
+output:
+  word_document:
+    toc: true
+    toc_depth: 2
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(tidyverse)
+library(knitr)
+library(ggplot2)
+library(survival)
+library(gtsummary)
+library(survminer)
+library(biostat3)
+library(readstata13)
+library(dplyr)
+library(haven)
+library(pander)
+```
+
+```{r}
+ load the fecal dataset
+
+
+
+
+
+
+
+```
